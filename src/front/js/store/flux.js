@@ -13,7 +13,8 @@ const getState = ({ getStore, getActions, setStore }) => {
 					background: "white",
 					initial: "white"
 				}
-			]
+			],
+			auth: false
 		},
 		actions: {
 			// Use getActions to call a function within a fuction
@@ -24,7 +25,7 @@ const getState = ({ getStore, getActions, setStore }) => {
 			getMessage: async () => {
 				try{
 					// fetching data from the backend
-					const resp = await fetch(process.env.BACKEND_URL + "/api/hello")
+					const resp = await fetch(process.env.BACKEND_URL + "/hello")
 					const data = await resp.json()
 					setStore({ message: data.message })
 					// don't forget to return something, that is how the async resolves
@@ -46,6 +47,111 @@ const getState = ({ getStore, getActions, setStore }) => {
 
 				//reset the global store
 				setStore({ demo: demo });
+			},
+
+			// SIGNUP / REGISTRO
+			signup: async(email, password) => {
+				try{
+					let response = await fetch(process.env.BACKEND_URL+'/signup',{
+						method: 'POST',
+						headers: {
+							'Content-Type':'application/json'
+						},
+						body: JSON.stringify({
+							'email': email,
+							'password': password
+						})
+					})
+					let data = await response.json()
+					if (response.ok){
+						return true;
+					}
+					return data;
+				}
+				catch (error) {
+					console.log(error);
+					return {'error':'unexpected error'};
+				}
+			},
+
+			// LOGIN / INICIO DE SESION
+			login: async(email, password) => {
+				try{
+					let response = await fetch(process.env.BACKEND_URL+'/login',{
+						method: 'POST',
+						headers: {
+							'Content-Type':'application/json'
+						},
+						body: JSON.stringify({
+							'email': email,
+							'password': password
+						})
+					})
+					let data = await response.json()
+					if(response.ok){
+						localStorage.setItem('token', data.access_token);
+						return true;
+					}
+					return data;
+					
+				}
+				catch (error) {
+					console.log(error);
+					return {'error':'unexpected error'};
+				}
+			},
+
+			// GET PROFILE
+			getProfile: async() => {
+				let token = localStorage.getItem("token")
+				try{
+					let response = await fetch(process.env.BACKEND_URL+'/profile',{
+						method: 'GET',
+						headers: {
+							'Content-Type':'application/json',
+							'Authorization':`Bearer ${token}`
+						},
+						
+					})
+					let data = await response.json()
+					console.log(data);
+					if(response.ok){
+						return true;
+						
+					}
+					return data;
+					
+				}
+				catch (error) {
+					console.log(error);
+					return {'error':'unexpected error'};
+				}
+			},
+			// VALID TOKEN
+			validToken: async() => {
+				let token = localStorage.getItem("token")
+				try{
+					let response = await fetch(process.env.BACKEND_URL+'/valid-token',{
+						method: 'GET',
+						headers: {
+							'Content-Type':'application/json',
+							'Authorization':`Bearer ${token}`
+						},
+						
+					})
+					let data = await response.json()
+					console.log(response);
+					console.log(data);
+					if(response.ok){
+						setStore({auth: data.logged})
+						return true;
+					}
+					return data;	
+				}
+				catch (error) {
+					console.log(error);
+					return {'error':'unexpected error'};
+				}
 			}
 		}
 	};
